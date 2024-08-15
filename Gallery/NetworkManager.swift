@@ -13,6 +13,7 @@ protocol NetworkManagerProtocol {
     func checkTokenValidity(accessToken: String) async throws -> Bool
     func loadImage(from url: URL) async -> UIImage?
     func getImagesURL(token: String) async -> Result<[Photo], NetworkError>
+    func getVideosURL(token: String) async -> Result<[Video], NetworkError>
 }
 
 final class NetworkManager: NetworkManagerProtocol {
@@ -63,6 +64,40 @@ final class NetworkManager: NetworkManagerProtocol {
             return nil
         }
     }
+    
+    func getVideosURL(token: String) async -> Result<[Video], NetworkError> {
+            var url = URLComponents(string: "https://api.vk.com/method/video.get")
+            url?.queryItems = [
+                URLQueryItem(name: "access_token", value: token),
+                URLQueryItem(name: "owner_id", value: "-128666765"),
+                URLQueryItem(name: "v", value: "5.199")
+            ]
+
+            do {
+                let (data, response) = try await URLSession.shared.data(from: (url?.url)!)
+                guard let httpResponse = response as? HTTPURLResponse else {
+                    throw NetworkError.unknown
+                }
+
+                switch httpResponse.statusCode {
+                case 200:
+                    let apiResponse = try JSONDecoder().decode(VideosResponse.self, from: data)
+                    return .success(apiResponse.response.items)
+                case 400:
+                    return .failure(NetworkError.badRequest)
+                case 401:
+                    return .failure(NetworkError.unauthorized)
+                case 404:
+                    return .failure(NetworkError.notFound)
+                case 500:
+                    return .failure(NetworkError.internalServerError)
+                default:
+                    return .failure(NetworkError.unknown)
+                }
+            } catch {
+                return .failure(NetworkError.unknown)
+            }
+        }
     
     func checkTokenValidity(accessToken: String) async throws -> Bool {
         var urlComponents = URLComponents()

@@ -9,6 +9,9 @@ import UIKit
 import WebKit
 
 class VideoDetailViewController: UIViewController {
+    
+    var videoURL: String?
+    var videoTitle: String?
 
     private var webView: WKWebView!
 
@@ -17,7 +20,7 @@ class VideoDetailViewController: UIViewController {
         self.view.backgroundColor = .white
         
         // Настройка UI для отображения видео и названия видео
-        self.title = "Название видео"
+        self.title = videoTitle
         
         // Добавление Share-меню
         let shareButton = UIBarButtonItem(barButtonSystemItem: .action, target: self, action: #selector(shareLink))
@@ -25,7 +28,7 @@ class VideoDetailViewController: UIViewController {
         
         // Настройка WebView для видео
         webView = WKWebView(frame: self.view.bounds)
-        if let url = URL(string: "https://vk.com/video_url") {
+        if let url = URL(string: videoURL ?? "") {
             let request = URLRequest(url: url)
             webView.load(request)
         }
@@ -33,8 +36,8 @@ class VideoDetailViewController: UIViewController {
     }
 
     @objc func shareLink() {
-        // Логика для Share-меню ссылки на видео
-        let activityViewController = UIActivityViewController(activityItems: ["Ссылка на видео"], applicationActivities: nil)
+        
+        let activityViewController = UIActivityViewController(activityItems: [videoURL ?? ""], applicationActivities: nil)
         self.present(activityViewController, animated: true, completion: nil)
     }
 }
