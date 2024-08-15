@@ -19,16 +19,29 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         guard let windowScene = (scene as? UIWindowScene) else { return }
         let window = UIWindow(windowScene: windowScene)
         
-        // Создание главного экрана
-        let mainViewController = MainViewController()
+        let rootViewController: UIViewController
         
-        // Обертываем его в Navigation Controller
-        let navigationController = UINavigationController(rootViewController: mainViewController)
+        if let _ = UserDefaults.standard.string(forKey: "authToken") {
+            // Если токен существует, переходим к MainViewController
+            let mainViewController = MainViewController()
+            let navigationController = UINavigationController(rootViewController: mainViewController)
+            rootViewController = navigationController
+        } else {
+            // Если токена нет, показываем экран входа
+            rootViewController = ViewController()
+        }
         
-        window.rootViewController = navigationController
-        self.window = window
+        window.rootViewController = rootViewController
         window.makeKeyAndVisible()
     }
+    
+    func switchToMainViewController() {
+            let mainViewController = MainViewController()
+            let navigationController = UINavigationController(rootViewController: mainViewController)
+            window?.rootViewController = navigationController
+            window?.makeKeyAndVisible()
+        }
+    
     
     func sceneDidDisconnect(_ scene: UIScene) {
         // Called as the scene is being released by the system.

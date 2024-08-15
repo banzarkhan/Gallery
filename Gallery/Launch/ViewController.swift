@@ -11,12 +11,12 @@ class ViewController: UIViewController {
     var label = UILabel()
     var logInButton = UIButton()
     
+    var token = ""
+    
     override func viewDidLoad() {
         super.viewDidLoad()
-    }
-    
-    override func viewWillAppear(_ animated: Bool) {
         buildView()
+        logInButton.addTarget(self, action: #selector(logInButtonPressed), for: .touchUpInside)
     }
     
     func buildView() {
@@ -29,11 +29,11 @@ class ViewController: UIViewController {
         logInButton.setTitleColor(UIColor(red: 1, green: 1, blue: 1, alpha: 1), for: .normal)
         logInButton.layer.cornerRadius = 12
         logInButton.backgroundColor = UIColor(red: 0, green: 0, blue: 0, alpha: 1)
-
+        
         // Enable Auto Layout
         logInButton.translatesAutoresizingMaskIntoConstraints = false
         self.view.addSubview(logInButton)
-
+        
         // Set constraints
         NSLayoutConstraint.activate([
             logInButton.heightAnchor.constraint(equalToConstant: 52),
@@ -51,11 +51,11 @@ class ViewController: UIViewController {
         label.font = .systemFont(ofSize: 44, weight: .bold)
         label.textColor = .black
         label.numberOfLines = 2
-
+        
         // Enable Auto Layout
         label.translatesAutoresizingMaskIntoConstraints = false
         self.view.addSubview(label)
-
+        
         // Set constraints
         NSLayoutConstraint.activate([
             label.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
@@ -64,7 +64,15 @@ class ViewController: UIViewController {
     }
     
     @objc func logInButtonPressed() {
-        
+        let loginViewController = LoginViewController()
+            
+            loginViewController.tokenHandler = { token in
+                print("Received token: \(token)")
+                
+            }
+            
+            loginViewController.modalPresentationStyle = .automatic
+            self.present(loginViewController, animated: true, completion: nil)
     }
 }
 
