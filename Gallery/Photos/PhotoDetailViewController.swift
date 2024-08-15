@@ -9,6 +9,8 @@ import UIKit
 
 class PhotoDetailViewController: UIViewController {
     
+    var image: UIImage?
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         self.view.backgroundColor = .black
@@ -16,14 +18,21 @@ class PhotoDetailViewController: UIViewController {
         // Настройка UI для отображения фото и даты загрузки
         self.title = "Дата загрузки"
         
+        if let image = image {
+            let imageView = UIImageView(image: image)
+            imageView.contentMode = .scaleAspectFit
+            imageView.frame = self.view.bounds
+            self.view.addSubview(imageView)
+        }
+        
         // Добавление Share-меню
         let shareButton = UIBarButtonItem(barButtonSystemItem: .action, target: self, action: #selector(sharePhoto))
         self.navigationItem.rightBarButtonItem = shareButton
     }
     
     @objc func sharePhoto() {
-        // Логика для Share-меню
-        let activityViewController = UIActivityViewController(activityItems: ["Фото для шаринга"], applicationActivities: nil)
+        guard let image = image else { return }
+        let activityViewController = UIActivityViewController(activityItems: [image], applicationActivities: nil)
         self.present(activityViewController, animated: true, completion: nil)
     }
     

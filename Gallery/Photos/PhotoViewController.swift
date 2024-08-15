@@ -10,6 +10,8 @@ import UIKit
 class PhotoViewController: UIViewController, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout {
     
     private var collectionView: UICollectionView!
+    private var photos: [UIImage?] = [] // Массив для хранения фотографий
+    private let networkManager = NetworkManager() // Экземпляр NetworkManager
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -29,22 +31,66 @@ class PhotoViewController: UIViewController, UICollectionViewDataSource, UIColle
         
         collectionView.register(UICollectionViewCell.self, forCellWithReuseIdentifier: "PhotoCell")
         self.view.addSubview(collectionView)
+        
+        Task {
+            await loadPhotos()
+        }
+    }
+    
+    private func loadPhotos() async {
+        let token = UserDefaults.standard.string(forKey: "authToken") ?? "" // Используйте ваш токен
+        
+        switch await networkManager.getImagesURL(token: token) {
+        case .success(let photoItems):
+            // Загружаем изображения по URL
+            self.photos = await loadImages(photoItems: photoItems)
+            self.collectionView.reloadData()
+        case .failure(let error):
+            print("Error loading images: \(error.localizedDescription)")
+        }
+    }
+    
+    private func loadImages(photoItems: [Photo]) async -> [UIImage?] {
+        return await withTaskGroup(of: UIImage?.self) { group in
+            for item in photoItems {
+                if let urlString = item.sizes.last?.url, let url = URL(string: urlString) {
+                    group.addTask {
+                        return await self.networkManager.loadImage(from: url)
+                    }
+                } else {
+                    group.addTask {
+                        return nil
+                    }
+                }
+            }
+            
+            var images: [UIImage?] = []
+            for await image in group {
+                images.append(image)
+            }
+            return images
+        }
     }
     
     // MARK: - UICollectionViewDataSource
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return 10 // Примерное количество фотографий
+        return photos.count
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "PhotoCell", for: indexPath)
-        cell.backgroundColor = .gray // Тут будет отображение фото
+        let imageView = UIImageView(image: photos[indexPath.item])
+        imageView.contentMode = .scaleAspectFill
+        imageView.clipsToBounds = true
+        cell.contentView.addSubview(imageView)
+        imageView.frame = cell.contentView.frame
         return cell
     }
     
     // MARK: - UICollectionViewDelegate
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         let photoDetailViewController = PhotoDetailViewController()
+        photoDetailViewController.image = photos[indexPath.item]
         navigationController?.pushViewController(photoDetailViewController, animated: true)
     }
     
